@@ -24,12 +24,12 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("login called")
-		timezone := args[0]
-		currentTime, err := login.GetTimeInTimezone(timezone)
+		// input := args[0]
+		res, err := login.RequestDeviceCode()
 		if err != nil {
-			log.Fatalln("The timezone string is invalid")
+			log.Fatalln("Login failed.")
 		}
-		fmt.Println(currentTime)
+		fmt.Println(res)
 	},
 }
 
