@@ -25,11 +25,12 @@ to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("login called")
 		// input := args[0]
-		res, err := login.RequestDeviceCode()
+		deviceCodeData, err := login.GetDeviceCode()
 		if err != nil {
-			log.Fatalln("Login failed.")
+			log.Panic("Requesting Device Code failed.")
 		}
-		fmt.Println(res)
+		// fmt.Println("Response from GetDeviceCode: ", deviceCodeData)
+		login.PostRequestToken(deviceCodeData)
 	},
 }
 
