@@ -1,6 +1,6 @@
 package loginResponse
 
-type Response struct {
+type LResponse struct {
 	DeviceCode              string `json:"device_code"`
 	UserCode                string `json:"user_code"`
 	VerificationURI         string `json:"verification_uri"`
