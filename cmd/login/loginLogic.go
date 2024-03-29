@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"strings"
-	"time"
 )
 
 func GetDeviceCode() (loginResponse.LResponse, error) {
@@ -20,8 +19,9 @@ func GetDeviceCode() (loginResponse.LResponse, error) {
 
 	req, _ := http.NewRequest("POST", url, payload)
 
-	req.Header.Add("content-type", "application/x-www-form-urlencoded")
-
+	req.Header.Add("Content-type", "application/x-www-form-urlencoded")
+	// fmt.Println("GetDeviceCode request Header")
+	// fmt.Println(req.Header)
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Panic("Failed to retreive device code.")
@@ -55,45 +55,28 @@ func GetDeviceCode() (loginResponse.LResponse, error) {
 
 func PostRequestToken(deviceCodeData loginResponse.LResponse) {
 	url := "https://dev-nucixn2420u6r4t4.us.auth0.com/oauth/token"
-	fmt.Println("DeviceCodeData:")
-	fmt.Println(deviceCodeData)
-	payload := strings.NewReader("grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code&device_code=%7B" + deviceCodeData.DeviceCode + "%7D&client_id=I4d0XcAXPue9sFGTQMPEboZEyYsTZwBG")
-	fmt.Println("Payload: ")
-	fmt.Println(payload)
-	req, _ := http.NewRequest("POST", url, payload)
+	method := "POST"
+	payload := strings.NewReader("grant_type=urn%3Aietf%3Aparams%3Aoauth%3Agrant-type%3Adevice_code&device_code=" + deviceCodeData.DeviceCode + "&client_id=I4d0XcAXPue9sFGTQMPEboZEyYsTZwBG")
 
-	req.Header.Add("content-type", "application/x-www-form-urlencoded")
-	var data map[string]interface{}
-	authenticated := false
-	for !authenticated {
-		fmt.Println("Checking if the user completed the flow...")
-		res, err := http.DefaultClient.Do(req)
-		if err != nil {
-			log.Panic("Failed to post request token: ", err)
-		}
-		defer res.Body.Close()
-		jsonErr := json.NewDecoder(res.Body).Decode(&data)
-		if jsonErr != nil {
-			log.Panic("Failed to decode res.Body to json: ", jsonErr)
-		}
-		if res.StatusCode == 200 {
-			fmt.Println("Authenticated!")
-			fmt.Println("- Id Token: { ", data["id_token"])
-			authenticated = true
-		} else if data["error"] != "authorization_pending" && data["error"] != "slow_down" {
-			fmt.Println(data["error"])
-			// fmt.Println(data["error_description"])
-			log.Panic(data["error_description"])
-		} else {
-			time.Sleep(time.Duration(deviceCodeData.Interval) * time.Second)
-		}
+	client := &http.Client{}
+	req, err := http.NewRequest(method, url, payload)
 
-		// jsonErr := json.NewDecoder(res.Body).Decode(&data)
-		// body, _ := io.ReadAll(res.Body)
-		// fmt.Println("token data res: ")
-		// fmt.Println(res)
-		// fmt.Println("token data body: ")
-		// fmt.Println(string(body))
-		// fmt.Println("data interface: ", data)
+	if err != nil {
+		fmt.Println(err)
+		return
 	}
+	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	res, err := client.Do(req)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer res.Body.Close()
+
+	body, err := io.ReadAll(res.Body)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	fmt.Println(string(body))
 }
