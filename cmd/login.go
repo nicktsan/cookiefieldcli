@@ -8,8 +8,9 @@ import (
 	"log"
 
 	"cookiefieldcli/cmd/login"
-
+	// "cookiefieldcli/cmd/login/interface"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 )
 
 // loginCmd represents the login command
@@ -23,14 +24,28 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
+		//Viper calculates the path of the config file starting from where go.mod is located
+		viper.AddConfigPath("./configs")
+		viper.SetConfigName("config") // Register config file name (no extension)
+		viper.SetConfigType("json")   // Look for specific type
+		viper.ReadInConfig()
+		domain := viper.Get("domain")
+		clientId := viper.Get("client_id")
 		fmt.Println("login called")
-		deviceCodeData, err := login.GetDeviceCode()
-		if err != nil {
-			log.Panic("Requesting Device Code failed.")
+		// fmt.Println(domain)
+		// fmt.Println(clientId)
+		loginJob := login.NewLoginJob(clientId.(string), domain.(string))
+		//First we need to retreive the device code.
+		deviceCodeErr := loginJob.GetDeviceCode()
+		if deviceCodeErr != nil {
+			log.Panic("Requesting Device Code failed.", deviceCodeErr)
 		}
-		fmt.Println("Response from GetDeviceCode: ", deviceCodeData)
-		login.PostRequestToken(deviceCodeData)
-		// login.PostRequestToken()
+		// fmt.Println("Response from GetDeviceCode: ", loginJob.DeviceCodeData)
+		//Second, we need to get a request token.
+		ReqTokenErr := loginJob.GetRequestToken()
+		if ReqTokenErr != nil {
+			log.Panic("Requesting Token failed.", ReqTokenErr)
+		}
 	},
 }
 
