@@ -4,10 +4,12 @@ Copyright © 2024 NAME HERE <EMAIL ADDRESS>
 package cmd
 
 import (
+	"cookiefieldcli/cmd/login"
 	"fmt"
 	"log"
+	"runtime"
+	"strings"
 
-	"cookiefieldcli/cmd/login"
 	// "cookiefieldcli/cmd/login/interface"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -24,8 +26,15 @@ Cobra is a CLI library for Go that empowers applications.
 This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		//Viper calculates the path of the config file starting from where go.mod is located
-		viper.AddConfigPath("./configs")
+		//Viper calculates the path of the config file starting from where cookiefieldcli login is called. Therefore, we must
+		//first get the full path of the file where the code is located.
+		_, filePath, _, _ := runtime.Caller(0)
+		// fmt.Println("File Path:", filePath)
+		// Our target config file is in the ./configs folder, but this file is located in ./cmd/login.go, so we need to trim
+		//cmd/login.go from the path
+		trimmedFilePath := strings.TrimSuffix(filePath, "cmd/login.go")
+		//Now we can properly search for the config file regardless of where the cookiefieldcli command is called.
+		viper.AddConfigPath(trimmedFilePath + "/configs")
 		viper.SetConfigName("config") // Register config file name (no extension)
 		viper.SetConfigType("json")   // Look for specific type
 		viper.ReadInConfig()
