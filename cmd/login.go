@@ -24,13 +24,13 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("login called")
-		// input := args[0]
 		deviceCodeData, err := login.GetDeviceCode()
 		if err != nil {
 			log.Panic("Requesting Device Code failed.")
 		}
-		// fmt.Println("Response from GetDeviceCode: ", deviceCodeData)
+		fmt.Println("Response from GetDeviceCode: ", deviceCodeData)
 		login.PostRequestToken(deviceCodeData)
+		// login.PostRequestToken()
 	},
 }
 
