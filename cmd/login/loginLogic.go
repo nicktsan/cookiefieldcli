@@ -4,6 +4,7 @@ import (
 	// loginInterface "cookiefieldcli/cmd/login/interface"
 	"cookiefieldcli/cmd/login/loginResponse"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -83,8 +84,6 @@ func (loginJob *LoginJob) GetRequestToken() error {
 		if pollErr != nil {
 			log.Panic(pollErr)
 		}
-		//Sleep for the interval duration in the device code data. If we poll too fast, Auth0 will give 429 status.
-		time.Sleep(time.Duration(loginJob.DeviceCodeData.Interval) * time.Second)
 	}
 	return nil
 }
@@ -105,22 +104,22 @@ func (loginJob *LoginJob) PollRequestTokenStatus(url string, method string) (boo
 	req, reqErr := http.NewRequest(method, url, payload)
 	if reqErr != nil {
 		fmt.Println(reqErr)
-		return false, reqErr
+		return true, reqErr
 	}
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	res, resErr := client.Do(req)
-	// var token_data map[string]interface{}
+	var token_data map[string]interface{}
 	if resErr != nil {
 		fmt.Println(resErr)
-		return false, resErr
+		return true, resErr
 	}
 	defer res.Body.Close()
-	// BodyDecodeErr := json.NewDecoder(res.Body).Decode(&token_data)
-	// if BodyDecodeErr != nil {
-	// 	fmt.Println("Could not convert res.Body to json: ")
-	// 	log.Panic(BodyDecodeErr)
-	// 	return false
-	// }
+	BodyDecodeErr := json.NewDecoder(res.Body).Decode(&token_data)
+	if BodyDecodeErr != nil {
+		fmt.Println("Could not convert res.Body to json: ")
+		log.Panic(BodyDecodeErr)
+		return true, BodyDecodeErr
+	}
 	// resbody, ReadAllErr := io.ReadAll(res.Body)
 	// if ReadAllErr != nil {
 	// 	fmt.Println(ReadAllErr)
@@ -135,14 +134,17 @@ func (loginJob *LoginJob) PollRequestTokenStatus(url string, method string) (boo
 		fmt.Println("- Id Token: ")
 		// fmt.Print(token_data["id_token"])
 		return true, nil
-	} else if res.StatusCode == 400 {
-		// fmt.Println("res.StatusCode: ")
-		// fmt.Print(res.StatusCode)
-		return true, nil
+		// } else if res.StatusCode == 400 {
+		// 	// fmt.Println("res.StatusCode: ")
+		// 	// fmt.Print(res.StatusCode)
+		// 	return true, nil
+		// }
 	}
-	// } else if token_data["error"] != "authorization_pending" && token_data["error"] != "slow_down" {
-	// 	log.Panic(token_data["error"])
-	// 	return true
-	// }
+	if token_data["error"] != "authorization_pending" && token_data["error"] != "slow_down" {
+		log.Panic(token_data["error"])
+		return true, errors.New(token_data["error"].(string))
+	}
+	//Sleep for the interval duration in the device code data. If we poll too fast, Auth0 will give 429 status.
+	time.Sleep(time.Duration(loginJob.DeviceCodeData.Interval) * time.Second)
 	return false, nil
 }
