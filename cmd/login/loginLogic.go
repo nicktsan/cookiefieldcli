@@ -35,7 +35,7 @@ func (loginJob *LoginJob) SetDeviceCodeData(deviceCodeData loginResponse.LRespon
 func (loginJob *LoginJob) GetDeviceCode() error {
 	//Set up an http request to get a device code.
 	url := loginJob.Domain + "/oauth/device/code"
-	payload := strings.NewReader("client_id=" + loginJob.ClientID + "&scope=%7Bopenid profile$7D")
+	payload := strings.NewReader("client_id=" + loginJob.ClientID + "&scope=openid profile")
 	req, _ := http.NewRequest("POST", url, payload)
 	req.Header.Add("Content-type", "application/x-www-form-urlencoded")
 	// fmt.Println("GetDeviceCode request Header")
@@ -125,14 +125,24 @@ func (loginJob *LoginJob) PollRequestTokenStatus(url string, method string) (boo
 	// 	fmt.Println(ReadAllErr)
 	// 	return false, ReadAllErr
 	// }
-	fmt.Println("res.StatusCode:")
-	fmt.Println(res.StatusCode)
+	// fmt.Println("res.StatusCode:")
+	// fmt.Println(res.StatusCode)
 	// fmt.Println("res.Body: ")
 	// fmt.Println(string(resbody))
 	if res.StatusCode == 200 {
 		fmt.Println("Authenticated!")
-		fmt.Println("- Id Token: ")
-		// fmt.Print(token_data["id_token"])
+		// fmt.Println("- Id Token: ")
+		// fmt.Println(token_data["id_token"])
+		fmt.Println(token_data)
+		// resbody, ReadAllErr := io.ReadAll(res.Body)
+		// if ReadAllErr != nil {
+		// 	fmt.Println(ReadAllErr)
+		// 	return false, ReadAllErr
+		// }
+		// fmt.Println("res.StatusCode:")
+		// fmt.Println(res.StatusCode)
+		// fmt.Println("res.Body: ")
+		// fmt.Println(string(resbody))
 		return true, nil
 		// } else if res.StatusCode == 400 {
 		// 	// fmt.Println("res.StatusCode: ")
@@ -147,4 +157,8 @@ func (loginJob *LoginJob) PollRequestTokenStatus(url string, method string) (boo
 	//Sleep for the interval duration in the device code data. If we poll too fast, Auth0 will give 429 status.
 	time.Sleep(time.Duration(loginJob.DeviceCodeData.Interval) * time.Second)
 	return false, nil
+}
+
+func (loginJob *LoginJob) ValidateToken() {
+
 }
